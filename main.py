@@ -38,20 +38,40 @@ def get_unique_students(data):
         unique_students.add(data_point['account_key'])
     return unique_students
 
-print len(enrollments)
 unique_enrolled_students = get_unique_students(enrollments)
-print len(unique_enrolled_students)
-
-print len(daily_engagement)
 unique_engagement_students = get_unique_students(daily_engagement)
-print len(unique_engagement_students)
-
-print len(project_submissions)
 unique_project_submitters = get_unique_students(project_submissions)
-print len(unique_project_submitters)
 
 for enrollment in enrollments:
     student = enrollment['account_key']
-    if student not in unique_engagement_students:
-        print enrollment
-        break
+    days = enrollment['days_to_cancel']
+    problem_accounts = 0
+    if student not in unique_engagement_students and days != 0:
+        problem_accounts += 1
+
+udacity_test_accounts = set()
+for enrollment in enrollments:
+    if enrollment['is_udacity']:
+        udacity_test_accounts.add(enrollment['account_key'])
+
+def remove_udacity_accounts(data):
+    non_udacity_data = []
+    for data_point in data:
+        if data_point['account_key'] not in udacity_test_accounts:
+            non_udacity_data.append(data_point)
+    return non_udacity_data
+
+non_udacity_enrollments = remove_udacity_accounts(enrollments)
+non_udacity_engagement = remove_udacity_accounts(daily_engagement)
+non_udacity_submissions = remove_udacity_accounts(project_submissions)
+
+paid_students = {}
+for enrollment in non_udacity_enrollments:
+    if not enrollment['is_canceled'] or enrollment['days_to_cancel'] > 7:
+        account_key = enrollment['account_key']
+        enrollment_date = enrollment['join_date']
+
+        if account_key not in paid_students or enrollment_date > paid_students[account_key]:
+            paid_students[account_key] = enrollment_date
+
+print len(paid_students)
